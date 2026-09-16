@@ -16,6 +16,7 @@ import java.util.Objects;
 public final class NeoFabricCompatibilityLayer implements AutoCloseable {
     private final NeoFabricLoader loader;
     private final CompatibilityClassLoaderRegistry classLoaders;
+    private final EventBus events = new EventBus();
     private List<CompatibilityDecision> decisions = List.of();
     private boolean started;
 
@@ -83,6 +84,26 @@ public final class NeoFabricCompatibilityLayer implements AutoCloseable {
             diagnostics.addAll(result.diagnostics());
         }
         return new ForeignFmlModBridge.Result(constructed, deferred, List.copyOf(diagnostics));
+    }
+
+    public ForeignFmlEventBridge.Result registerForeignFmlEvents() throws IOException {
+        if (!started) throw new IllegalStateException("Compatibility layer has not started");
+        int subscribers = 0;
+        java.util.ArrayList<String> diagnostics = new java.util.ArrayList<>();
+        for (CompatibilityDecision decision : decisions) {
+            if (!decision.accepted()) continue;
+            if (decision.mod().loader() != LoaderKind.FORGE
+                    && decision.mod().loader() != LoaderKind.NEOFORGE) continue;
+            var result = ForeignFmlEventBridge.register(Path.of(decision.mod().source()),
+                    classLoaders.get(decision.mod().id()), events);
+            subscribers += result.subscribers();
+            diagnostics.addAll(result.diagnostics());
+        }
+        return new ForeignFmlEventBridge.Result(subscribers, List.copyOf(diagnostics));
+    }
+
+    public EventBus events() {
+        return events;
     }
 
     public NeoFabricLoader loader() {

@@ -26,6 +26,19 @@ public final class EventBus {
                 .add(new Listener(priority, order, event -> handler.accept(eventType.cast(event))));
     }
 
+    public void registerUntyped(Class<?> eventType, Consumer<Object> handler) {
+        registerInternal(eventType, EventPriority.NORMAL, handler);
+    }
+
+    private void registerInternal(Class<?> eventType, EventPriority priority, Consumer<Object> handler) {
+        long order;
+        synchronized (this) {
+            order = sequence++;
+        }
+        handlers.computeIfAbsent(eventType, ignored -> new CopyOnWriteArrayList<>())
+                .add(new Listener(priority, order, handler));
+    }
+
     public void post(Object event) {
         List<Listener> matching = new ArrayList<>();
         handlers.forEach((eventType, listeners) -> {
