@@ -22,4 +22,16 @@ public final class RealItemForgeMod {
 }
 JAVA
 javac --release 25 -cp "$FABRIC_JAR:$MC_JAR" -d "$WORK/classes" "$WORK/src/fixture/RealItemForgeMod.java"
-printf 'RealItemForgeCompileProbe: PASS\n'
+mkdir -p "$WORK/classes/META-INF"
+cat > "$WORK/classes/META-INF/mods.toml" <<'TOML'
+modLoader="javafml"
+loaderVersion="[26.2,)"
+license="All Rights Reserved"
+[[mods]]
+modId="realitem"
+version="1.0.0"
+displayName="NeoFabric Real Item Probe"
+TOML
+jar --create --file "$WORK/real-item-forge-mod.jar" -C "$WORK/classes" .
+unzip -t "$WORK/real-item-forge-mod.jar" >/dev/null
+printf 'RealItemForgeCompileProbe: PASS\nRealItemFixtureJar: %s\n' "$WORK/real-item-forge-mod.jar"
