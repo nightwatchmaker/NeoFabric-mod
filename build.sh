@@ -20,6 +20,7 @@ find "$ROOT/src/test/java" -name '*.java' -print0 | xargs -0 javac --release 17 
 java -ea -cp "$BUILD/classes:$BUILD/test-classes" org.neofabric.core.NeoFabricRuntimeTest
 java -ea -cp "$BUILD/classes:$BUILD/test-classes" org.neofabric.core.CompatibilityClassLoaderTest
 java -ea -cp "$BUILD/classes:$BUILD/test-classes" org.neofabric.core.CompatibilityEventBridgeTest
+java -ea -cp "$BUILD/classes:$BUILD/test-classes" org.neofabric.core.ForeignFmlEventBridgeTest
 java -ea -cp "$BUILD/classes:$BUILD/test-classes" org.neofabric.core.FabricEntrypointBridgeTest
 jar --create --file "$BUILD/libs/neofabric-core-0.2.0-dev.jar" -C "$BUILD/classes" .
 if [[ ! -f "$ROOT/forge-adapter/build/libs/examplemod-0.3.0-dev.jar" ]]; then
