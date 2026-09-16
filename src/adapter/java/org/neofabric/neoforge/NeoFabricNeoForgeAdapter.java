@@ -35,6 +35,14 @@ public final class NeoFabricNeoForgeAdapter {
                     net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent.class,
                     event -> layer.postHostEvent(new org.neofabric.core.EntityDamageEvent(
                             event.getEntity(), event.getSource(), event.getAmount(), event)));
+            net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(
+                    net.neoforged.neoforge.event.level.block.BreakBlockEvent.class,
+                    event -> layer.postHostEvent(new org.neofabric.core.BlockInteractionEvent(
+                            "break", event.getLevel(), event.getPos(), event.getState(), event.getPlayer(), event)));
+            net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(
+                    net.neoforged.neoforge.event.level.BlockEvent.EntityPlaceEvent.class,
+                    event -> layer.postHostEvent(new org.neofabric.core.BlockInteractionEvent(
+                            "place", event.getLevel(), event.getPos(), event.getPlacedBlock(), event.getEntity(), event)));
             NeoFabricLoader loader = layer.loader();
             modBus.addListener(net.neoforged.neoforge.registries.RegisterEvent.class,
                     event -> NeoFabricNeoForgeRegistryBridge.registerMatching(event, loader));
