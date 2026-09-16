@@ -22,6 +22,7 @@ public final class NeoFabricCompatibilityLayer implements AutoCloseable {
     private boolean started;
 
     public NeoFabricCompatibilityLayer(MinecraftTarget target, ClassLoader hostClassLoader) {
+        NeoFabricHostBridge.bind(events);
         loader = new NeoFabricLoader(Objects.requireNonNull(target, "target"));
         classLoaders = new CompatibilityClassLoaderRegistry(
                 Objects.requireNonNull(hostClassLoader, "hostClassLoader"));
