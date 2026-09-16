@@ -9,6 +9,7 @@ public final class BlockInteractionEvent implements CancellableEvent {
     private final Object actor;
     private final Object nativeEvent;
     private boolean canceled;
+    private boolean notifyClient = true;
 
     public BlockInteractionEvent(String action, Object level, Object position,
                                  Object state, Object actor, Object nativeEvent) {
@@ -25,6 +26,8 @@ public final class BlockInteractionEvent implements CancellableEvent {
     public Object state() { return state; }
     public Object actor() { return actor; }
     public Object nativeEvent() { return nativeEvent; }
+    public boolean notifyClient() { return notifyClient; }
+    public void setNotifyClient(boolean notifyClient) { this.notifyClient = notifyClient; }
     @Override public boolean isCanceled() { return canceled; }
     @Override public void setCanceled(boolean canceled) { this.canceled = canceled; }
 }

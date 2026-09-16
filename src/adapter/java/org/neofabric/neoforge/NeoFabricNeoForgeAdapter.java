@@ -46,6 +46,7 @@ public final class NeoFabricNeoForgeAdapter {
                         var translated = new org.neofabric.core.BlockInteractionEvent(
                                 "break", event.getLevel(), event.getPos(), event.getState(), event.getPlayer(), event);
                         layer.postHostEvent(translated);
+                        event.setNotifyClient(translated.notifyClient());
                         if (translated.isCanceled()) event.setCanceled(true);
                     });
             net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(
