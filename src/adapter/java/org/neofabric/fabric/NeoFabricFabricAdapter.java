@@ -2,6 +2,7 @@ package org.neofabric.fabric;
 
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.loader.api.FabricLoader;
+import org.neofabric.core.LoaderKind;
 import org.neofabric.core.MinecraftTarget;
 import org.neofabric.core.NeoFabricCompatibilityLayer;
 
@@ -17,7 +18,7 @@ public final class NeoFabricFabricAdapter implements ModInitializer {
         try {
             layer = new NeoFabricCompatibilityLayer(MinecraftTarget.MC_26_2,
                     NeoFabricFabricAdapter.class.getClassLoader());
-            var decisions = layer.start(gameDirectory);
+            var decisions = layer.start(gameDirectory, LoaderKind.FABRIC);
             System.out.println("[NeoFabric] Fabric host compatibility layer initialized for Minecraft 26.2");
             decisions.forEach(decision -> System.out.println("[NeoFabric] " + decision.mod().id()
                     + " -> " + (decision.accepted() ? "translated" : "rejected")

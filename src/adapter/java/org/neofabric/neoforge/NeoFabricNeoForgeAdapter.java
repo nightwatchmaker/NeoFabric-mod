@@ -3,6 +3,7 @@ package org.neofabric.neoforge;
 import java.nio.file.Path;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
+import org.neofabric.core.LoaderKind;
 import org.neofabric.core.MinecraftTarget;
 import org.neofabric.core.NeoFabricCompatibilityLayer;
 import org.neofabric.core.NeoFabricLoader;
@@ -22,7 +23,7 @@ public final class NeoFabricNeoForgeAdapter {
         try {
             layer = new NeoFabricCompatibilityLayer(MinecraftTarget.MC_26_2,
                     NeoFabricNeoForgeAdapter.class.getClassLoader());
-            var decisions = layer.start(gameDirectory);
+            var decisions = layer.start(gameDirectory, LoaderKind.NEOFORGE);
             NeoFabricLoader loader = layer.loader();
             modBus.addListener(net.neoforged.neoforge.registries.RegisterEvent.class,
                     event -> NeoFabricNeoForgeRegistryBridge.registerMatching(event, loader));

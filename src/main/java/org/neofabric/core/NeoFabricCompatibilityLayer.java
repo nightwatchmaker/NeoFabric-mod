@@ -30,8 +30,23 @@ public final class NeoFabricCompatibilityLayer implements AutoCloseable {
      * This method never invokes a launcher or creates a child JVM.
      */
     public synchronized List<CompatibilityDecision> start(Path gameDirectory) throws IOException {
+        return start(gameDirectory, null);
+    }
+
+    /**
+     * Starts translation for foreign-loader mods only. Native mods remain
+     * owned by the host loader, exactly like native Linux components remain
+     * outside Wine's translation path.
+     */
+    public synchronized List<CompatibilityDecision> start(Path gameDirectory, LoaderKind hostLoader) throws IOException {
         if (started) return decisions;
-        decisions = loader.loadCatalog(Objects.requireNonNull(gameDirectory, "gameDirectory").resolve("mods"));
+        List<CompatibilityDecision> discovered = loader.loadCatalog(
+                Objects.requireNonNull(gameDirectory, "gameDirectory").resolve("mods"));
+        decisions = discovered.stream()
+                .filter(decision -> hostLoader == null
+                        || (decision.mod().loader() != hostLoader
+                        && !decision.mod().id().equalsIgnoreCase("neofabric")))
+                .toList();
         classLoaders.prepare(decisions);
         started = true;
         return decisions;
