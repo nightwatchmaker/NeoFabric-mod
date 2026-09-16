@@ -88,6 +88,7 @@ mkdir -p "$BUILD/mods"
 jar --create --file "$BUILD/mods/NeoFabric-Fabric-0.3.0-dev.jar" \
     -C "$BUILD/classes" org/neofabric/core \
     -C "$BUILD/adapter-classes" org/neofabric/fabric \
+    -C "$BUILD/adapter-classes" net/minecraftforge \
     -C "$ROOT/src/adapter/resources" fabric.mod.json
 jar --create --file "$BUILD/mods/NeoFabric-Forge-0.3.0-dev.jar" \
     -C "$BUILD/classes" org/neofabric/core \
