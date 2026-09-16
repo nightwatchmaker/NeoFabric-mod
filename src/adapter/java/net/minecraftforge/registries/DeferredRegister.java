@@ -29,7 +29,7 @@ public final class DeferredRegister<T> {
     }
     public <I extends T> RegistryObject<I> register(String name, Supplier<? extends I> supplier) {
         String key = modid + ":" + name;
-        RegistryObject<I> object = new RegistryObject<>(key, supplier);
+        RegistryObject<I> object = new RegistryObject<>(registryName, key, supplier);
         entries.put(name, object);
         return object;
     }

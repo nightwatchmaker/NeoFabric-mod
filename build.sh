@@ -16,6 +16,7 @@ javac --release 17 -cp "$BUILD/classes:$ROOT/vendor/fml-loader-11.0.16.jar:$ROOT
     "$ROOT/vendor/fancymodloader-src/loader/src/main/java/net/neoforged/fml/neofabric/NeoFabricMixinBridge.java"
 javac --release 25 -cp "$BUILD/classes:$ROOT/vendor/fabric-loader-0.19.5.jar" -d "$BUILD/adapter-classes" \
     "$ROOT/src/adapter/java/org/neofabric/fabric/NeoFabricFabricAdapter.java" \
+    "$ROOT/src/adapter/java/org/neofabric/fabric/FabricNativeRegistryBridge.java" \
     "$ROOT/src/adapter/java/net/minecraftforge/eventbus/api/IEventBus.java" \
     "$ROOT/src/adapter/java/net/minecraftforge/eventbus/api/Event.java" \
     "$ROOT/src/adapter/java/net/minecraftforge/eventbus/api/SubscribeEvent.java" \

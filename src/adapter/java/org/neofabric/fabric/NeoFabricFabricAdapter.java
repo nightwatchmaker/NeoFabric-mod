@@ -18,6 +18,7 @@ public final class NeoFabricFabricAdapter implements ModInitializer {
         try {
             layer = new NeoFabricCompatibilityLayer(MinecraftTarget.MC_26_2,
                     NeoFabricFabricAdapter.class.getClassLoader());
+            FabricNativeRegistryBridge.install();
             var decisions = layer.start(gameDirectory, LoaderKind.FABRIC);
             int translatedEntrypoints = layer.initializeFabricEntrypoints("CLIENT");
             var foreignFml = layer.registerForeignFmlEvents();
