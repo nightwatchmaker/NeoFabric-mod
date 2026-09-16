@@ -21,6 +21,8 @@ public final class NeoFabricForgeAdapter {
                     event -> layer.fireHostPhase(org.neofabric.core.LifecyclePhase.COMMON_SETUP, event));
             modBus.addListener(net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent.class,
                     event -> layer.fireHostPhase(org.neofabric.core.LifecyclePhase.CLIENT_READY, event));
+            modBus.addListener(net.minecraftforge.event.TickEvent.ServerTickEvent.class,
+                    event -> layer.postHostEvent(new org.neofabric.core.ServerTickEvent(event, true)));
             System.out.println("[NeoFabric] Forge host compatibility layer initialized for Minecraft 26.2; translated Fabric entrypoints: " + fabricEntrypoints);
             decisions.forEach(decision -> System.out.println("[NeoFabric] " + decision.mod().id()
                     + " -> " + (decision.accepted() ? "translated" : "rejected")

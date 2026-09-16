@@ -114,6 +114,11 @@ public final class NeoFabricCompatibilityLayer implements AutoCloseable {
         return lifecycle;
     }
 
+    public void postHostEvent(Object event) {
+        if (!started) throw new IllegalStateException("Compatibility layer has not started");
+        events.post(event);
+    }
+
     public void fireHostPhase(LifecyclePhase phase, Object context) {
         if (!started) throw new IllegalStateException("Compatibility layer has not started");
         lifecycle.fire(phase);
@@ -123,7 +128,6 @@ public final class NeoFabricCompatibilityLayer implements AutoCloseable {
     public NeoFabricLoader loader() {
         return loader;
     }
-
     public CompatibilityClassLoaderRegistry classLoaders() {
         return classLoaders;
     }

@@ -29,6 +29,8 @@ public final class NeoFabricNeoForgeAdapter {
                     event -> layer.fireHostPhase(org.neofabric.core.LifecyclePhase.COMMON_SETUP, event));
             modBus.addListener(net.neoforged.fml.event.lifecycle.FMLClientSetupEvent.class,
                     event -> layer.fireHostPhase(org.neofabric.core.LifecyclePhase.CLIENT_READY, event));
+            modBus.addListener(net.neoforged.neoforge.event.tick.ServerTickEvent.Post.class,
+                    event -> layer.postHostEvent(new org.neofabric.core.ServerTickEvent(event, true)));
             NeoFabricLoader loader = layer.loader();
             modBus.addListener(net.neoforged.neoforge.registries.RegisterEvent.class,
                     event -> NeoFabricNeoForgeRegistryBridge.registerMatching(event, loader));
