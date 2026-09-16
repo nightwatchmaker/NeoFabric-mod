@@ -19,7 +19,8 @@ public final class NeoFabricFabricAdapter implements ModInitializer {
             layer = new NeoFabricCompatibilityLayer(MinecraftTarget.MC_26_2,
                     NeoFabricFabricAdapter.class.getClassLoader());
             var decisions = layer.start(gameDirectory, LoaderKind.FABRIC);
-            System.out.println("[NeoFabric] Fabric host compatibility layer initialized for Minecraft 26.2");
+            int translatedEntrypoints = layer.initializeFabricEntrypoints("CLIENT");
+            System.out.println("[NeoFabric] Fabric host compatibility layer initialized for Minecraft 26.2; translated Fabric entrypoints: " + translatedEntrypoints);
             decisions.forEach(decision -> System.out.println("[NeoFabric] " + decision.mod().id()
                     + " -> " + (decision.accepted() ? "translated" : "rejected")
                     + " (" + decision.reason() + ")"));
