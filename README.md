@@ -60,4 +60,14 @@ The shell installer has been tested in an isolated `.minecraft` directory. `NeoF
       -> Fabric compatibility backend
       -> Minecraft 26.2 version bridge
 
-NeoFabric owns bootstrap, mod discovery, classloading policy, lifecycle ordering, and the common API. The three compatibility backends translate each ecosystem's metadata, events, registries, networking, and transformation expectations into NeoFabric. NeoFabric must not be implemented as a Fabric mod or as a feature inside Fabric Loader.
+## Wine-style compatibility architecture
+
+NeoFabric is a compatibility mod, not a second launcher or virtual machine. The native host loader remains responsible for Minecraft startup. NeoFabric runs inside that host session and translates foreign-loader contracts through isolated backend adapters:
+
+    Native Fabric / Forge / NeoForge host
+      -> NeoFabric compatibility mod
+        -> common NeoFabricCompatibilityLayer
+          -> Fabric / Forge / NeoForge / future backend adapters
+            -> foreign-loader mods
+
+No VM, second Minecraft process, or separate host-loader installation is required. The compatibility layer owns discovery, dependency ordering, classloader isolation, lifecycle translation, registry translation, and backend dispatch while the host owns the game process.
