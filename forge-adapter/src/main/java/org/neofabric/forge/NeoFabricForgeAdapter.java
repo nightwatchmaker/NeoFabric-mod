@@ -10,15 +10,17 @@ import java.nio.file.Path;
 /** Forge host adapter: native Forge remains the host runtime. */
 @Mod("neofabric")
 public final class NeoFabricForgeAdapter {
-    public NeoFabricForgeAdapter() {
+    public NeoFabricForgeAdapter(net.minecraftforge.eventbus.api.IEventBus modBus) {
         Path gameDirectory = Path.of(System.getProperty("user.dir", "."));
         try {
             var layer = new NeoFabricCompatibilityLayer(MinecraftTarget.MC_26_2,
                     NeoFabricForgeAdapter.class.getClassLoader());
             var decisions = layer.start(gameDirectory, LoaderKind.FORGE);
             int fabricEntrypoints = layer.initializeFabricEntrypoints("CLIENT");
-            layer.fireHostPhase(org.neofabric.core.LifecyclePhase.COMMON_SETUP, this);
-            layer.fireHostPhase(org.neofabric.core.LifecyclePhase.CLIENT_READY, this);
+            modBus.addListener(net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent.class,
+                    event -> layer.fireHostPhase(org.neofabric.core.LifecyclePhase.COMMON_SETUP, event));
+            modBus.addListener(net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent.class,
+                    event -> layer.fireHostPhase(org.neofabric.core.LifecyclePhase.CLIENT_READY, event));
             System.out.println("[NeoFabric] Forge host compatibility layer initialized for Minecraft 26.2; translated Fabric entrypoints: " + fabricEntrypoints);
             decisions.forEach(decision -> System.out.println("[NeoFabric] " + decision.mod().id()
                     + " -> " + (decision.accepted() ? "translated" : "rejected")

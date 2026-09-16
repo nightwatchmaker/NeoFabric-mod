@@ -25,8 +25,10 @@ public final class NeoFabricNeoForgeAdapter {
                     NeoFabricNeoForgeAdapter.class.getClassLoader());
             var decisions = layer.start(gameDirectory, LoaderKind.NEOFORGE);
             int fabricEntrypoints = layer.initializeFabricEntrypoints("CLIENT");
-            layer.fireHostPhase(org.neofabric.core.LifecyclePhase.COMMON_SETUP, this);
-            layer.fireHostPhase(org.neofabric.core.LifecyclePhase.CLIENT_READY, this);
+            modBus.addListener(net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent.class,
+                    event -> layer.fireHostPhase(org.neofabric.core.LifecyclePhase.COMMON_SETUP, event));
+            modBus.addListener(net.neoforged.fml.event.lifecycle.FMLClientSetupEvent.class,
+                    event -> layer.fireHostPhase(org.neofabric.core.LifecyclePhase.CLIENT_READY, event));
             NeoFabricLoader loader = layer.loader();
             modBus.addListener(net.neoforged.neoforge.registries.RegisterEvent.class,
                     event -> NeoFabricNeoForgeRegistryBridge.registerMatching(event, loader));
