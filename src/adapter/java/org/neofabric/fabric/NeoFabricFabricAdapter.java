@@ -20,6 +20,8 @@ public final class NeoFabricFabricAdapter implements ModInitializer {
                     NeoFabricFabricAdapter.class.getClassLoader());
             var decisions = layer.start(gameDirectory, LoaderKind.FABRIC);
             int translatedEntrypoints = layer.initializeFabricEntrypoints("CLIENT");
+            layer.fireHostPhase(org.neofabric.core.LifecyclePhase.COMMON_SETUP, this);
+            layer.fireHostPhase(org.neofabric.core.LifecyclePhase.CLIENT_READY, this);
             var foreignFml = layer.registerForeignFmlEvents();
             System.out.println("[NeoFabric] Fabric host compatibility layer initialized for Minecraft 26.2; translated Fabric entrypoints: " + translatedEntrypoints
                     + "; foreign FML subscribers: " + foreignFml.subscribers());

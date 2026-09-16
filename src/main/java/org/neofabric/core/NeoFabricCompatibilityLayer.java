@@ -17,6 +17,7 @@ public final class NeoFabricCompatibilityLayer implements AutoCloseable {
     private final NeoFabricLoader loader;
     private final CompatibilityClassLoaderRegistry classLoaders;
     private final EventBus events = new EventBus();
+    private final LifecycleDispatcher lifecycle = new LifecycleDispatcher();
     private List<CompatibilityDecision> decisions = List.of();
     private boolean started;
 
@@ -41,6 +42,7 @@ public final class NeoFabricCompatibilityLayer implements AutoCloseable {
      */
     public synchronized List<CompatibilityDecision> start(Path gameDirectory, LoaderKind hostLoader) throws IOException {
         if (started) return decisions;
+        lifecycle.fire(LifecyclePhase.LOADER_READY);
         List<CompatibilityDecision> discovered = loader.loadCatalog(
                 Objects.requireNonNull(gameDirectory, "gameDirectory").resolve("mods"));
         decisions = discovered.stream()
@@ -50,6 +52,8 @@ public final class NeoFabricCompatibilityLayer implements AutoCloseable {
                 .toList();
         classLoaders.prepare(decisions);
         started = true;
+        lifecycle.fire(LifecyclePhase.MODS_DISCOVERED);
+        lifecycle.fire(LifecyclePhase.MODS_CONSTRUCTED);
         return decisions;
     }
 
@@ -104,6 +108,16 @@ public final class NeoFabricCompatibilityLayer implements AutoCloseable {
 
     public EventBus events() {
         return events;
+    }
+
+    public LifecycleDispatcher lifecycle() {
+        return lifecycle;
+    }
+
+    public void fireHostPhase(LifecyclePhase phase, Object context) {
+        if (!started) throw new IllegalStateException("Compatibility layer has not started");
+        lifecycle.fire(phase);
+        events.post(new LifecycleEvent(phase, context));
     }
 
     public NeoFabricLoader loader() {
