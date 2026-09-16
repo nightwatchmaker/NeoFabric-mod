@@ -17,6 +17,7 @@ public final class NeoFabricForgeAdapter {
                     NeoFabricForgeAdapter.class.getClassLoader());
             var decisions = layer.start(gameDirectory, LoaderKind.FORGE);
             int fabricEntrypoints = layer.initializeFabricEntrypoints("CLIENT");
+            var foreignFml = layer.registerForeignFmlEvents();
             modBus.addListener(net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent.class,
                     event -> layer.fireHostPhase(org.neofabric.core.LifecyclePhase.COMMON_SETUP, event));
             modBus.addListener(net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent.class,
