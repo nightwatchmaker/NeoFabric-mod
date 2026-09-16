@@ -18,7 +18,8 @@ public final class ForeignForgeEventBus {
             if (method.getParameterCount() != 1 || !hasSubscribeAnnotation(method)) continue;
             if (target == null && !Modifier.isStatic(method.getModifiers())) continue;
             method.setAccessible(true);
-            delegate.registerUntyped(method.getParameterTypes()[0], event -> {
+            EventPriority priority = priorityOf(method);
+            delegate.registerUntyped(method.getParameterTypes()[0], priority, event -> {
                 try {
                     method.invoke(target, event);
                 } catch (ReflectiveOperationException error) {
@@ -30,6 +31,21 @@ public final class ForeignForgeEventBus {
 
     public <T> void addListener(Class<T> eventType, java.util.function.Consumer<T> listener) {
         delegate.register(eventType, listener);
+    }
+
+    private static EventPriority priorityOf(Method method) {
+        try {
+            for (var annotation : method.getAnnotations()) {
+                String name = annotation.annotationType().getName();
+                if (!name.equals("net.minecraftforge.eventbus.api.SubscribeEvent")
+                        && !name.equals("net.neoforged.bus.api.SubscribeEvent")) continue;
+                Object value = annotation.annotationType().getMethod("priority").invoke(annotation);
+                return EventPriority.valueOf(((Enum<?>) value).name());
+            }
+        } catch (ReflectiveOperationException | IllegalArgumentException ignored) {
+            // Unknown foreign priority metadata safely falls back to normal ordering.
+        }
+        return EventPriority.NORMAL;
     }
 
     private static boolean hasSubscribeAnnotation(Method method) {

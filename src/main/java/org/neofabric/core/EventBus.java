@@ -27,7 +27,11 @@ public final class EventBus {
     }
 
     public void registerUntyped(Class<?> eventType, Consumer<Object> handler) {
-        registerInternal(eventType, EventPriority.NORMAL, handler);
+        registerUntyped(eventType, EventPriority.NORMAL, handler);
+    }
+
+    public void registerUntyped(Class<?> eventType, EventPriority priority, Consumer<Object> handler) {
+        registerInternal(eventType, priority, handler);
     }
 
     private void registerInternal(Class<?> eventType, EventPriority priority, Consumer<Object> handler) {
