@@ -37,6 +37,7 @@ public final class NeoFabricNeoForgeAdapter {
                         var translated = new org.neofabric.core.EntityDamageEvent(
                                 event.getEntity(), event.getSource(), event.getAmount(), event);
                         layer.postHostEvent(translated);
+                        event.setAmount(translated.amount());
                         if (translated.isCanceled()) event.setCanceled(true);
                     });
             net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(

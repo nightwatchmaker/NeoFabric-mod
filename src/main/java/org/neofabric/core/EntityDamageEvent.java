@@ -4,7 +4,7 @@ package org.neofabric.core;
 public final class EntityDamageEvent implements CancellableEvent {
     private final Object entity;
     private final Object source;
-    private final float amount;
+    private float amount;
     private final Object nativeEvent;
     private boolean canceled;
 
@@ -18,6 +18,12 @@ public final class EntityDamageEvent implements CancellableEvent {
     public Object entity() { return entity; }
     public Object source() { return source; }
     public float amount() { return amount; }
+    public void setAmount(float amount) {
+        if (!Float.isFinite(amount) || amount < 0.0f) {
+            throw new IllegalArgumentException("Damage amount must be finite and non-negative");
+        }
+        this.amount = amount;
+    }
     public Object nativeEvent() { return nativeEvent; }
     @Override public boolean isCanceled() { return canceled; }
     @Override public void setCanceled(boolean canceled) { this.canceled = canceled; }
