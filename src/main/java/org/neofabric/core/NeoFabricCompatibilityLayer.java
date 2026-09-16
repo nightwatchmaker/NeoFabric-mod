@@ -52,6 +52,20 @@ public final class NeoFabricCompatibilityLayer implements AutoCloseable {
         return decisions;
     }
 
+    /** Initializes Fabric entrypoints for translated Fabric mods only. */
+    public synchronized int initializeFabricEntrypoints(String distribution) throws IOException {
+        if (!started) throw new IllegalStateException("Compatibility layer has not started");
+        int initialized = 0;
+        for (CompatibilityDecision decision : decisions) {
+            if (!decision.accepted() || decision.mod().loader() != LoaderKind.FABRIC) continue;
+            Path source = Path.of(decision.mod().source());
+            FabricModInfo metadata = FabricMetadataAdapter.read(source);
+            initialized += FabricEntrypointBridge.initialize(metadata,
+                    classLoaders.get(decision.mod().id()), distribution).size();
+        }
+        return initialized;
+    }
+
     public NeoFabricLoader loader() {
         return loader;
     }

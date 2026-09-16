@@ -24,10 +24,11 @@ public final class NeoFabricNeoForgeAdapter {
             layer = new NeoFabricCompatibilityLayer(MinecraftTarget.MC_26_2,
                     NeoFabricNeoForgeAdapter.class.getClassLoader());
             var decisions = layer.start(gameDirectory, LoaderKind.NEOFORGE);
+            int fabricEntrypoints = layer.initializeFabricEntrypoints("CLIENT");
             NeoFabricLoader loader = layer.loader();
             modBus.addListener(net.neoforged.neoforge.registries.RegisterEvent.class,
                     event -> NeoFabricNeoForgeRegistryBridge.registerMatching(event, loader));
-            System.out.println("[NeoFabric] NeoForge host compatibility layer initialized for Minecraft 26.2");
+            System.out.println("[NeoFabric] NeoForge host compatibility layer initialized for Minecraft 26.2; translated Fabric entrypoints: " + fabricEntrypoints);
             decisions.forEach(decision -> System.out.println("[NeoFabric] " + decision.mod().id()
                     + " -> " + (decision.accepted() ? "translated" : "rejected")
                     + " (" + decision.reason() + ")"));
