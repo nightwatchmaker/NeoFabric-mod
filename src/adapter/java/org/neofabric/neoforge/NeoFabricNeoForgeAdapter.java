@@ -33,16 +33,28 @@ public final class NeoFabricNeoForgeAdapter {
                     event -> layer.postHostEvent(new org.neofabric.core.ServerTickEvent(event, true)));
             net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(
                     net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent.class,
-                    event -> layer.postHostEvent(new org.neofabric.core.EntityDamageEvent(
-                            event.getEntity(), event.getSource(), event.getAmount(), event)));
+                    event -> {
+                        var translated = new org.neofabric.core.EntityDamageEvent(
+                                event.getEntity(), event.getSource(), event.getAmount(), event);
+                        layer.postHostEvent(translated);
+                        if (translated.isCanceled()) event.setCanceled(true);
+                    });
             net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(
                     net.neoforged.neoforge.event.level.block.BreakBlockEvent.class,
-                    event -> layer.postHostEvent(new org.neofabric.core.BlockInteractionEvent(
-                            "break", event.getLevel(), event.getPos(), event.getState(), event.getPlayer(), event)));
+                    event -> {
+                        var translated = new org.neofabric.core.BlockInteractionEvent(
+                                "break", event.getLevel(), event.getPos(), event.getState(), event.getPlayer(), event);
+                        layer.postHostEvent(translated);
+                        if (translated.isCanceled()) event.setCanceled(true);
+                    });
             net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(
                     net.neoforged.neoforge.event.level.BlockEvent.EntityPlaceEvent.class,
-                    event -> layer.postHostEvent(new org.neofabric.core.BlockInteractionEvent(
-                            "place", event.getLevel(), event.getPos(), event.getPlacedBlock(), event.getEntity(), event)));
+                    event -> {
+                        var translated = new org.neofabric.core.BlockInteractionEvent(
+                                "place", event.getLevel(), event.getPos(), event.getPlacedBlock(), event.getEntity(), event);
+                        layer.postHostEvent(translated);
+                        if (translated.isCanceled()) event.setCanceled(true);
+                    });
             NeoFabricLoader loader = layer.loader();
             modBus.addListener(net.neoforged.neoforge.registries.RegisterEvent.class,
                     event -> NeoFabricNeoForgeRegistryBridge.registerMatching(event, loader));
