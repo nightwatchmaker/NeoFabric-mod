@@ -30,6 +30,7 @@ import org.neofabric.core.*;
 public final class Probe {
     public static void main(String[] args) throws Exception {
         EventBus bus = new EventBus();
+        NeoFabricHostBridge.bind(bus);
         var result = ForeignFmlEventBridge.register(Path.of(args[0]), Probe.class.getClassLoader(), bus);
         if (result.subscribers() != 1) throw new AssertionError(result.diagnostics());
         var event = new EntityDamageEvent("entity", "source", 9.0f, "native");
@@ -38,8 +39,10 @@ public final class Probe {
         DeferredRegister<String> registry = DeferredRegister.create(String.class, "externalforge");
         RegistryObject<String> value = registry.register("value", () -> "resolved");
         registry.register(MinecraftForge.EVENT_BUS);
-        if (!"resolved".equals(value.get()) || !value.isPresent()) {
-            throw new AssertionError("registry supplier did not resolve through packaged shim");
+        if (value.isPresent()) throw new AssertionError("registry resolved before common setup");
+        bus.post(new LifecycleEvent(LifecyclePhase.COMMON_SETUP, "probe"));
+        if (!value.isPresent() || !"resolved".equals(value.get())) {
+            throw new AssertionError("registry supplier did not resolve at common setup");
         }
         System.out.println("PackagedFabricShimProbe: PASS");
     }
