@@ -8,8 +8,10 @@ ASM_JAR="/root/.gradle/caches/modules-2/files-2.1/org.ow2.asm/asm/9.10.1/ada2141
 ASM_TREE_JAR="/root/.gradle/caches/modules-2/files-2.1/org.ow2.asm/asm-tree/9.10.1/e244332a17564c1d1572449399a842de35881be2/asm-tree-9.10.1.jar"
 if [[ ! -f "$ASM_JAR" || ! -f "$ASM_TREE_JAR" ]]; then echo "ASM dependencies missing" >&2; exit 1; fi
 find "$ROOT/src/main/java" -name '*.java' -print0 | xargs -0 javac --release 17 -cp "$ROOT/vendor/fml-loader-11.0.16.jar:$ROOT/vendor/neoforge-26.2.0.86.jar:$ASM_JAR:$ASM_TREE_JAR" -d "$BUILD/classes"
-javac --release 17 -cp "$BUILD/classes:$ROOT/vendor/fml-loader-11.0.16.jar:$ROOT/vendor/neoforge-26.2.0.86.jar:$ROOT/vendor/fancymodloader-src/loader/build/libs/loader-11.0.16-neofabric.1.jar:$ASM_JAR:$ASM_TREE_JAR" \
-    -d "$BUILD/classes" "$ROOT/vendor/fancymodloader-src/loader/src/main/java/net/neoforged/fml/neofabric/NeoFabricBootstrap.java"
+javac --release 17 -cp "$BUILD/classes:$ROOT/vendor/fml-loader-11.0.16.jar:$ROOT/vendor/neoforge-26.2.0.86.jar:$ROOT/vendor/fancymodloader-src/loader/build/libs/loader-11.0.16-neofabric.1.jar:$ASM_JAR:$ASM_TREE_JAR:/root/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.17.1+mixin.0.8.7/1cca8837fa31d8cfbde11a391f108f2bda30bca4/sponge-mixin-0.17.1+mixin.0.8.7.jar" \
+    -d "$BUILD/classes" \
+    "$ROOT/vendor/fancymodloader-src/loader/src/main/java/net/neoforged/fml/neofabric/NeoFabricBootstrap.java" \
+    "$ROOT/vendor/fancymodloader-src/loader/src/main/java/net/neoforged/fml/neofabric/NeoFabricMixinBridge.java"
 find "$ROOT/src/adapter/java" -name 'NeoFabricFabricAdapter.java' -print0 | xargs -0 javac --release 25 -cp "$BUILD/classes:$ROOT/vendor/fabric-loader-0.19.5.jar" -d "$BUILD/adapter-classes"
 find "$ROOT/src/adapter/java" -path '*/neoforge/*.java' -print0 | xargs -0 javac --release 25 -cp "$BUILD/classes:$ROOT/vendor/fml-loader-11.0.16.jar:$ROOT/vendor/neoforge-26.2.0.86.jar:/root/.gradle/caches/modules-2/files-2.1/net.neoforged/bus/8.0.5/5b2d33285ab5d1554e9798ad98c40d6ea3868bd5/bus-8.0.5.jar:/root/.gradle/caches/fabric-loom/minecraftMaven/net/minecraft/minecraft-merged-deobf/26.2/minecraft-merged-deobf-26.2.jar" -d "$BUILD/neoforge-classes"
 find "$ROOT/src/test/java" -name '*.java' -print0 | xargs -0 javac --release 17 -cp "$BUILD/classes" -d "$BUILD/test-classes"

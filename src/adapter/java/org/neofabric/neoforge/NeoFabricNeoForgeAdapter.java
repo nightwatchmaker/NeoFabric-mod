@@ -3,38 +3,35 @@ package org.neofabric.neoforge;
 import java.nio.file.Path;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
-import org.neofabric.core.CompatibilityCoordinator;
 import org.neofabric.core.MinecraftTarget;
-import org.neofabric.core.ModDiscovery;
+import org.neofabric.core.NeoFabricCompatibilityLayer;
 import org.neofabric.core.NeoFabricLoader;
 
-/** NeoForge 26.2 host adapter using the real FML @Mod bootstrap contract. */
+/** NeoForge host adapter: native NeoForge remains the host runtime. */
 @Mod("neofabric")
 public final class NeoFabricNeoForgeAdapter {
+    private static NeoFabricCompatibilityLayer layer;
+
     public NeoFabricNeoForgeAdapter(IEventBus modBus) {
-        Path modsDirectory;
+        Path gameDirectory;
         try {
-            modsDirectory = net.neoforged.fml.loading.FMLLoader.getCurrent().getGameDir().resolve("mods");
+            gameDirectory = net.neoforged.fml.loading.FMLLoader.getCurrent().getGameDir();
         } catch (Throwable unavailable) {
-            modsDirectory = Path.of(System.getProperty("user.dir", "."), "mods");
+            gameDirectory = Path.of(System.getProperty("user.dir", "."));
         }
-        NeoFabricLoader loader = net.neoforged.fml.neofabric.NeoFabricBootstrap.currentLoader();
-        if (loader == null) loader = new NeoFabricLoader(MinecraftTarget.MC_26_2);
         try {
-            var decisions = loader.loadCatalog(modsDirectory);
-            final NeoFabricLoader fallbackLoader = loader;
+            layer = new NeoFabricCompatibilityLayer(MinecraftTarget.MC_26_2,
+                    NeoFabricNeoForgeAdapter.class.getClassLoader());
+            var decisions = layer.start(gameDirectory);
+            NeoFabricLoader loader = layer.loader();
             modBus.addListener(net.neoforged.neoforge.registries.RegisterEvent.class,
-                    event -> {
-                        NeoFabricLoader activeLoader = net.neoforged.fml.neofabric.NeoFabricBootstrap.currentLoader();
-                        NeoFabricNeoForgeRegistryBridge.registerMatching(event,
-                                activeLoader != null ? activeLoader : fallbackLoader);
-                    });
-            System.out.println("[NeoFabric] NeoForge compatibility adapter initialized for Minecraft 26.2");
+                    event -> NeoFabricNeoForgeRegistryBridge.registerMatching(event, loader));
+            System.out.println("[NeoFabric] NeoForge host compatibility layer initialized for Minecraft 26.2");
             decisions.forEach(decision -> System.out.println("[NeoFabric] " + decision.mod().id()
-                    + " -> " + (decision.accepted() ? "accepted" : "rejected")
+                    + " -> " + (decision.accepted() ? "translated" : "rejected")
                     + " (" + decision.reason() + ")"));
         } catch (Exception error) {
-            System.err.println("[NeoFabric] compatibility scan failed: " + error.getMessage());
+            System.err.println("[NeoFabric] compatibility layer failed: " + error.getMessage());
         }
     }
 }

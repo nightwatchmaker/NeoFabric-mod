@@ -2,28 +2,28 @@ package org.neofabric.fabric;
 
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.loader.api.FabricLoader;
-import org.neofabric.core.CompatibilityCoordinator;
 import org.neofabric.core.MinecraftTarget;
-import org.neofabric.core.ModDiscovery;
-import org.neofabric.core.NeoFabricRuntime;
+import org.neofabric.core.NeoFabricCompatibilityLayer;
 
 import java.nio.file.Path;
 
-/** Fabric Loader 0.19.5+ bootstrap adapter for the Minecraft 26.2 target. */
+/** Fabric host adapter: NeoFabric runs inside Fabric, like Wine inside Linux. */
 public final class NeoFabricFabricAdapter implements ModInitializer {
+    private static NeoFabricCompatibilityLayer layer;
+
     @Override
     public void onInitialize() {
-        Path modsDirectory = FabricLoader.getInstance().getGameDir().resolve("mods");
-        NeoFabricRuntime runtime = new NeoFabricRuntime();
+        Path gameDirectory = FabricLoader.getInstance().getGameDir();
         try {
-            ModDiscovery.scanDirectory(modsDirectory).forEach(runtime::addMod);
-            var decisions = new CompatibilityCoordinator(MinecraftTarget.MC_26_2).decide(runtime.mods());
-            System.out.println("[NeoFabric] Fabric host adapter initialized for Minecraft 26.2");
+            layer = new NeoFabricCompatibilityLayer(MinecraftTarget.MC_26_2,
+                    NeoFabricFabricAdapter.class.getClassLoader());
+            var decisions = layer.start(gameDirectory);
+            System.out.println("[NeoFabric] Fabric host compatibility layer initialized for Minecraft 26.2");
             decisions.forEach(decision -> System.out.println("[NeoFabric] " + decision.mod().id()
-                    + " -> " + (decision.accepted() ? "accepted" : "rejected")
+                    + " -> " + (decision.accepted() ? "translated" : "rejected")
                     + " (" + decision.reason() + ")"));
         } catch (Exception error) {
-            System.err.println("[NeoFabric] compatibility scan failed: " + error.getMessage());
+            System.err.println("[NeoFabric] compatibility layer failed: " + error.getMessage());
         }
     }
 }
