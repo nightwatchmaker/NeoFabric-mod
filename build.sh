@@ -19,12 +19,16 @@ java -ea -cp "$BUILD/classes:$BUILD/test-classes" org.neofabric.core.NeoFabricRu
 java -ea -cp "$BUILD/classes:$BUILD/test-classes" org.neofabric.core.CompatibilityClassLoaderTest
 java -ea -cp "$BUILD/classes:$BUILD/test-classes" org.neofabric.core.FabricEntrypointBridgeTest
 jar --create --file "$BUILD/libs/neofabric-core-0.2.0-dev.jar" -C "$BUILD/classes" .
-if [[ -f "$ROOT/forge-adapter/build/libs/examplemod-0.3.0-dev.jar" ]]; then
-    (cd "$BUILD/forge-classes" && jar xf "$ROOT/forge-adapter/build/libs/examplemod-0.3.0-dev.jar" org/neofabric/forge/NeoFabricForgeAdapter.class)
-else
-    echo "Forge adapter build missing; run forge-adapter/gradlew build first" >&2
+if [[ ! -f "$ROOT/forge-adapter/build/libs/examplemod-0.3.0-dev.jar" ]]; then
+    echo "Forge adapter build missing; building Forge host module from source"
+    (cd "$ROOT/forge-adapter" && ./gradlew --no-daemon build -x test)
+fi
+if [[ ! -f "$ROOT/forge-adapter/build/libs/examplemod-0.3.0-dev.jar" ]]; then
+    echo "Forge host module build failed" >&2
     exit 1
 fi
+rm -rf "$BUILD/forge-classes" && mkdir -p "$BUILD/forge-classes"
+(cd "$BUILD/forge-classes" && jar xf "$ROOT/forge-adapter/build/libs/examplemod-0.3.0-dev.jar" org/neofabric/forge/NeoFabricForgeAdapter.class)
 mkdir -p "$BUILD/fml-patch"
 FML_PATCH_CP="$ROOT/vendor/fml-loader-11.0.16.jar:$ROOT/vendor/neoforge-26.2.0.86.jar:$BUILD/classes:/home/nightwatchmaker/.local/share/PrismLauncher/libraries/com/mojang/logging/1.7.12/logging-1.7.12.jar:/home/nightwatchmaker/.local/share/PrismLauncher/libraries/org/slf4j/slf4j-api/2.0.17/slf4j-api-2.0.17.jar:/games/PrismLauncher/instances/26.2(1)/libraries/maven-artifact-3.8.5.jar:/root/.gradle/caches/modules-2/files-2.1/org.jetbrains/annotations/24.0.1/13c5c75c4206580aa4d683bffee658caae6c9f43/annotations-24.0.1.jar"
 javac --release 25 -cp "$FML_PATCH_CP" \
@@ -70,4 +74,22 @@ zip -q -d "$BUILD/libs/neofabric-loader-3.9.0-dev.jar" lang/en_us.json || true
 jar uf "$BUILD/libs/neofabric-loader-3.9.0-dev.jar" \
     -C "$BUILD/fml-lang" lang/en_us.json
 chmod 777 "$BUILD/libs/neofabric-loader-3.9.0-dev.jar"
-java -cp "$BUILD/classes" org.neofabric.core.Main "$ROOT/examples/mods"
+mkdir -p "$BUILD/mods"
+# Host-native mod artifacts: the host loader supplies its own API/runtime.
+jar --create --file "$BUILD/mods/NeoFabric-Fabric-0.3.0-dev.jar" \
+    -C "$BUILD/classes" org/neofabric/core \
+    -C "$BUILD/adapter-classes" org/neofabric/fabric \
+    -C "$ROOT/src/adapter/resources" fabric.mod.json
+jar --create --file "$BUILD/mods/NeoFabric-Forge-0.3.0-dev.jar" \
+    -C "$BUILD/classes" org/neofabric/core \
+    -C "$BUILD/forge-classes" org/neofabric/forge \
+    -C "$ROOT/forge-adapter/src/main/resources" META-INF/mods.toml \
+    -C "$ROOT/forge-adapter/src/main/resources" pack.mcmeta
+jar --create --file "$BUILD/mods/NeoFabric-NeoForge-0.3.0-dev.jar" \
+    -C "$BUILD/classes" org/neofabric/core \
+    -C "$BUILD/neoforge-classes" org/neofabric/neoforge \
+    -C "$ROOT/src/adapter/resources" META-INF/neoforge.mods.toml \
+    -C "$ROOT/forge-adapter/src/main/resources" pack.mcmeta
+chmod 777 "$BUILD/mods"/*.jar
+printf 'Built host mods:\n'
+printf '  %s\n' "$BUILD/mods"/*.jar
