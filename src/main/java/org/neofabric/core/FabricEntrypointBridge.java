@@ -43,9 +43,13 @@ public final class FabricEntrypointBridge {
         for (String className : metadata.entrypoints().getOrDefault(key, List.of())) {
             try {
                 Class<?> entrypointClass = Class.forName(className, true, modLoader);
-                Object entrypoint = entrypointClass.getDeclaredConstructor().newInstance();
-                Method initialize = entrypointClass.getMethod("onInitialize");
-                initialize.invoke(entrypoint);
+                String methodName = switch (key) {
+                    case "client" -> "onInitializeClient";
+                    case "server" -> "onInitializeServer";
+                    default -> "onInitialize";
+                };
+                Method initialize = entrypointClass.getMethod(methodName);
+                initialize.invoke(entrypointClass.getDeclaredConstructor().newInstance());
                 initialized.add(className);
             } catch (ReflectiveOperationException error) {
                 throw new IllegalStateException("Could not initialize Fabric " + key + " entrypoint " + className

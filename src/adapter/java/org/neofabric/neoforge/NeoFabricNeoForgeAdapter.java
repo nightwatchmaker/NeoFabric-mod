@@ -9,16 +9,26 @@ import org.neofabric.core.ModDiscovery;
 import org.neofabric.core.NeoFabricLoader;
 
 /** NeoForge 26.2 host adapter using the real FML @Mod bootstrap contract. */
-@Mod("neofabric-loader")
+@Mod("neofabric")
 public final class NeoFabricNeoForgeAdapter {
     public NeoFabricNeoForgeAdapter(IEventBus modBus) {
-        Path modsDirectory = Path.of(System.getProperty("user.dir", "."), "mods");
-        NeoFabricLoader loader = new NeoFabricLoader(MinecraftTarget.MC_26_2);
+        Path modsDirectory;
         try {
-            var mods = ModDiscovery.scanDirectory(modsDirectory);
-            var decisions = mods.stream().map(loader::translate).toList();
+            modsDirectory = net.neoforged.fml.loading.FMLLoader.getCurrent().getGameDir().resolve("mods");
+        } catch (Throwable unavailable) {
+            modsDirectory = Path.of(System.getProperty("user.dir", "."), "mods");
+        }
+        NeoFabricLoader loader = net.neoforged.fml.neofabric.NeoFabricBootstrap.currentLoader();
+        if (loader == null) loader = new NeoFabricLoader(MinecraftTarget.MC_26_2);
+        try {
+            var decisions = loader.loadCatalog(modsDirectory);
+            final NeoFabricLoader fallbackLoader = loader;
             modBus.addListener(net.neoforged.neoforge.registries.RegisterEvent.class,
-                    event -> NeoFabricNeoForgeRegistryBridge.registerMatching(event, loader));
+                    event -> {
+                        NeoFabricLoader activeLoader = net.neoforged.fml.neofabric.NeoFabricBootstrap.currentLoader();
+                        NeoFabricNeoForgeRegistryBridge.registerMatching(event,
+                                activeLoader != null ? activeLoader : fallbackLoader);
+                    });
             System.out.println("[NeoFabric] NeoForge compatibility adapter initialized for Minecraft 26.2");
             decisions.forEach(decision -> System.out.println("[NeoFabric] " + decision.mod().id()
                     + " -> " + (decision.accepted() ? "accepted" : "rejected")

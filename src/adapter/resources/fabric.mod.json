@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "id": "neofabric-loader",
+  "id": "neofabric",
   "version": "0.3.0-dev",
   "name": "NeoFabric 26.2 Loader",
   "description": "Minecraft 26.2 Fabric Loader host adapter for NeoFabric compatibility services.",

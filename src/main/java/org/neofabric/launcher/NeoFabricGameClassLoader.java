@@ -33,17 +33,20 @@ public final class NeoFabricGameClassLoader extends URLClassLoader {
 
     @Override
     protected Class<?> findClass(String name) throws ClassNotFoundException {
-        Class<?> alreadyLoaded = findLoadedClass(name);
-        if (alreadyLoaded != null) return alreadyLoaded;
-        String resourceName = name.replace('.', '/') + ".class";
-        URL resource = findResource(resourceName);
-        if (resource == null) throw new ClassNotFoundException(name);
-        try {
-            byte[] bytecode = resource.openStream().readAllBytes();
-            bytecode = transforms.apply(name, bytecode);
-            return defineClass(name, bytecode, 0, bytecode.length);
-        } catch (IOException error) {
-            throw new ClassNotFoundException("Could not read " + name, error);
+        synchronized (getClassLoadingLock(name)) {
+            Class<?> alreadyLoaded = findLoadedClass(name);
+            if (alreadyLoaded != null) return alreadyLoaded;
+            String resourceName = name.replace('.', '/') + ".class";
+            URL resource = findResource(resourceName);
+            if (resource == null) throw new ClassNotFoundException(name);
+            try (var stream = resource.openStream()) {
+                byte[] bytecode = transforms.apply(name, stream.readAllBytes());
+                Class<?> defined = findLoadedClass(name);
+                if (defined != null) return defined;
+                return defineClass(name, bytecode, 0, bytecode.length);
+            } catch (IOException error) {
+                throw new ClassNotFoundException("Could not read " + name, error);
+            }
         }
     }
 

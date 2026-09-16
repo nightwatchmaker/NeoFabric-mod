@@ -32,7 +32,9 @@ def main():
         "mainClass": "org.neofabric.launcher.NeoFabricLauncher",
         "arguments": base.get("arguments", {}),
         "jvmArguments": base.get("jvmArguments", []),
-        "libraries": base["libraries"],
+        "libraries": base["libraries"] + [{
+        "name": "org.neofabric:loader:3.9.0-dev"
+    }],
         "neoFabric": {
             "development": True,
             "loaderJar": args.loader_jar.name,

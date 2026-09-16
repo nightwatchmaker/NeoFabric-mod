@@ -14,7 +14,8 @@ public final class CompatibilityClassLoader extends URLClassLoader {
     private static final List<String> PARENT_FIRST = List.of(
             "java.", "javax.", "jdk.", "sun.",
             "org.neofabric.", "net.fabricmc.", "net.minecraftforge.", "net.neoforged.",
-            "org.slf4j.", "org.apache.logging.", "com.google.gson."
+            "org.slf4j.", "org.apache.logging.", "org.spongepowered.asm.", "org.objectweb.asm.",
+            "com.google.gson.", "com.google.common."
     );
 
     public CompatibilityClassLoader(Path modJar, ClassLoader parent) throws IOException {

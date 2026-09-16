@@ -9,6 +9,7 @@ public record FabricModInfo(
         String version,
         Map<String, List<String>> entrypoints,
         Map<String, String> dependencies,
-        List<String> mixins
+        List<String> mixins,
+        String accessWidener
 ) {
 }

@@ -16,7 +16,9 @@ public final class DependencyMetadataAdapter {
     private static final Pattern FABRIC_DEPENDS = Pattern.compile("\\\"depends\\\"\\s*:\\s*\\{([^}]*)}");
     private static final Pattern JSON_PAIR = Pattern.compile("\\\"([^\\\"]+)\\\"\\s*:\\s*\\\"([^\\\"]+)\\\"");
     private static final Pattern FORGE_BLOCK = Pattern.compile("(?s)\\[\\[dependencies\\.([^]]+)]](.*?)(?=\\[\\[|\\z)");
-    private static final Pattern TOML_MOD_ID = Pattern.compile("(?m)^\\s*modId\\s*=\\s*\\\"([^\\\"]+)\\\"");
+    private static final Pattern TOML_MOD_ID = Pattern.compile("(?m)^\\s*modId\\s*=\\s*['\\\"]([^'\\\"]+)['\\\"]");
+    private static final Pattern TOML_VERSION_RANGE = Pattern.compile("(?m)^\\s*versionRange\\s*=\\s*['\\\"]([^'\\\"]+)['\\\"]");
+    private static final Pattern TOML_MANDATORY = Pattern.compile("(?m)^\\s*mandatory\\s*=\\s*(true|false)");
 
     private DependencyMetadataAdapter() {}
 
@@ -42,8 +44,11 @@ public final class DependencyMetadataAdapter {
                 while (blocks.find()) {
                     String owner = blocks.group(1);
                     Matcher dependency = TOML_MOD_ID.matcher(blocks.group(2));
+                    Matcher version = TOML_VERSION_RANGE.matcher(blocks.group(2));
+                    Matcher mandatory = TOML_MANDATORY.matcher(blocks.group(2));
                     if (dependency.find()) result.computeIfAbsent(owner, ignored -> new ArrayList<>())
-                            .add(new ModDependency(dependency.group(1), "*"));
+                            .add(new ModDependency(dependency.group(1), version.find() ? version.group(1) : "*",
+                                    mandatory.find() && !Boolean.parseBoolean(mandatory.group(1))));
                 }
                 if (result.isEmpty()) {
                     Matcher owner = TOML_MOD_ID.matcher(text);

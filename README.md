@@ -4,9 +4,6 @@ NeoFabric is an experimental loader-compatibility foundation for Minecraft Java 
 
 Current slice (0.2.0-dev, Minecraft 26.2 target)
 
-if you don't want to read all this, then
-what im trying to say is that this works with Fabric, Forge, and NeoForge mods all at once
-
 - Loader-neutral `NeoFabricRuntime` and thread-safe event bus.
 - Safe metadata inspection without loading mod classes.
 - Detection of `fabric.mod.json`, `META-INF/neoforge.mods.toml`, and `META-INF/mods.toml`.

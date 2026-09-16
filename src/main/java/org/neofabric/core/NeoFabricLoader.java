@@ -50,11 +50,21 @@ public final class NeoFabricLoader {
         List<ModDescriptor> discovered = ModDiscovery.scanDirectory(modsDirectory);
         fireLifecycle(LifecyclePhase.MODS_DISCOVERED, discovered);
         Map<String, List<ModDependency>> dependencies = new java.util.LinkedHashMap<>();
-        for (ModDescriptor mod : discovered) dependencies.put(mod.id(),
-                DependencyMetadataAdapter.read(Path.of(mod.source())).values().stream().flatMap(List::stream).toList());
+        final var providedRuntime = java.util.Set.of("minecraft", "java", "fabricloader",
+                "forge", "neoforge", "neofabric-loader");
+        for (ModDescriptor mod : discovered) {
+            Map<String, List<ModDependency>> metadataDependencies = DependencyMetadataAdapter.read(Path.of(mod.source()));
+            dependencies.put(mod.id(), metadataDependencies.getOrDefault(mod.id(), List.of()).stream()
+                    // These identifiers are supplied by the active NeoFabric
+                    // runtime, not separate entries in mods/.
+                    .filter(dependency -> !providedRuntime.contains(dependency.id().toLowerCase(java.util.Locale.ROOT)))
+                    .toList());
+        }
+        Map<String, String> versions = discovered.stream().collect(java.util.stream.Collectors.toMap(
+                ModDescriptor::id, ModDescriptor::version, (left, right) -> left, java.util.LinkedHashMap::new));
         List<String> order;
         try {
-            order = new ModDependencyResolver().resolve(dependencies);
+            order = new ModDependencyResolver().resolve(dependencies, versions);
         } catch (IllegalArgumentException error) {
             return discovered.stream().map(mod -> new CompatibilityDecision(mod, false,
                     "dependency resolution failed: " + error.getMessage())).toList();

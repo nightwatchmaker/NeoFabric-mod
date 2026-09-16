@@ -53,12 +53,50 @@ public final class NeoFabricRuntimeTest {
         assert forgeInfo.versions().equals(java.util.List.of("1.0.0"));
         ForgeModInfo neoForgeInfo = ForgeMetadataAdapter.read(java.nio.file.Path.of("examples/mods/neoforge-example.jar"));
         assert neoForgeInfo.modIds().equals(java.util.List.of("neoforge-example"));
+        var tomlJar = java.nio.file.Files.createTempFile("neofabric-multi-entry", ".jar");
+        try (var output = new java.util.jar.JarOutputStream(java.nio.file.Files.newOutputStream(tomlJar))) {
+            output.putNextEntry(new java.util.jar.JarEntry("META-INF/neoforge.mods.toml"));
+            output.write(("modLoader='javafml'\nloaderVersion='[26.0,)'\n" +
+                    "[[mods]]\nmodId='first'\nversion='${file.jarVersion}'\n" +
+                    "[[mods]]\nmodId='second'\nversion='2.0.0'\n" +
+                    "[[dependencies.first]]\nmodId='second'\nmandatory=true\nversionRange='[2.0,3.0)'\n").getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            output.closeEntry();
+        }
+        var multi = ForgeMetadataAdapter.read(tomlJar);
+        assert multi.modIds().equals(java.util.List.of("first", "second")) : "single-quoted TOML IDs failed: " + multi.modIds();
+        assert multi.versions().equals(java.util.List.of("${file.jarVersion}", "2.0.0")) : "multi-entry TOML versions failed";
+        var multiDeps = DependencyMetadataAdapter.read(tomlJar);
+        assert multiDeps.get("first").equals(java.util.List.of(new ModDependency("second", "[2.0,3.0)"))) : "TOML dependency range failed";
+        var discoveredMulti = ModDiscovery.scanDirectory(tomlJar.getParent());
+        assert discoveredMulti.stream().filter(mod -> mod.source().equals(tomlJar.toString())).count() == 2 : "multi-entry discovery failed";
+        var multiLoader = new NeoFabricLoader(MinecraftTarget.MC_26_2);
+        var multiDecisions = multiLoader.loadCatalog(tomlJar.getParent());
+        assert multiDecisions.size() == 2 : "multi-entry catalog failed";
+        assert multiDecisions.get(0).mod().id().equals("second") && multiDecisions.get(1).mod().id().equals("first")
+                : "per-entry dependency order failed";
         assert MinecraftTarget.MC_26_2.runtimeVersion().equals("26.2") : "wrong target profile";
         var dependencyResolver = new ModDependencyResolver();
         var dependencyGraph = new java.util.LinkedHashMap<String, java.util.List<ModDependency>>();
         dependencyGraph.put("base", java.util.List.of());
         dependencyGraph.put("addon", java.util.List.of(new ModDependency("base", "1.0.0")));
         assert dependencyResolver.resolve(dependencyGraph).equals(java.util.List.of("base", "addon"));
+        assert ModDependencyResolver.matches("2.5.0", "[2.0,3.0)");
+        assert ModDependencyResolver.matches("3.0.0", "[3.0]");
+        assert !ModDependencyResolver.matches("1.9.9", "[2.0,3.0)");
+        try {
+            dependencyResolver.resolve(java.util.Map.of("addon", java.util.List.of(new ModDependency("base", "[2.0,3.0)"))),
+                    java.util.Map.of("base", "1.5.0"));
+            throw new AssertionError("incompatible dependency version accepted");
+        } catch (IllegalArgumentException expected) {
+        }
+        var optionalGraph = new java.util.LinkedHashMap<String, java.util.List<ModDependency>>();
+        optionalGraph.put("addon", java.util.List.of(new ModDependency("optional", "[2.0,3.0)", true)));
+        assert dependencyResolver.resolve(optionalGraph, java.util.Map.of()).equals(java.util.List.of("addon"));
+        optionalGraph.put("optional", java.util.List.of());
+        assert dependencyResolver.resolve(optionalGraph, java.util.Map.of("optional", "1.0.0")).equals(java.util.List.of("optional", "addon"));
+        assert dependencyResolver.resolve(java.util.Map.of("addon", java.util.List.of(
+                new ModDependency("optional", "[2.0,3.0)", true))),
+                java.util.Map.of("optional", "1.0.0")).equals(java.util.List.of("addon"));
         Object bus = new Object();
         ModConstructorBridge.construct(NoArgMod.class, bus);
         assert NoArgMod.constructed : "no-argument mod constructor was not invoked";
@@ -131,6 +169,30 @@ public final class NeoFabricRuntimeTest {
             registry.register("third", "C");
             throw new AssertionError("frozen registry accepted a new entry");
         } catch (IllegalStateException expected) {
+        }
+        var typedRegistry = new NeoRegistry<Object>("test:typed", String.class);
+        typedRegistry.register("test:value", "ok");
+        int[] lazyCalls = {0};
+        typedRegistry.registerLazy("test:lazy", () -> { lazyCalls[0]++; return "lazy"; });
+        assert lazyCalls[0] == 0 : "lazy registry factory evaluated too early";
+        assert typedRegistry.resolveLazy("test:lazy").equals("lazy");
+        assert lazyCalls[0] == 1 : "lazy registry factory was not resolved exactly once";
+        assert typedRegistry.resolveLazy("test:lazy").equals("lazy");
+        assert lazyCalls[0] == 1 : "lazy registry factory was evaluated twice";
+        assert typedRegistry.entries().get("test:lazy").equals("lazy");
+        assert typedRegistry.lazyEntries().isEmpty() : "lazy entry was not promoted";
+        var frozenLazy = new NeoRegistry<Object>("test:frozen_lazy", String.class);
+        frozenLazy.registerLazy("test:later", () -> "later");
+        frozenLazy.freeze();
+        try {
+            frozenLazy.resolveLazy("test:later");
+            throw new AssertionError("frozen registry resolved a lazy entry");
+        } catch (IllegalStateException expected) {
+        }
+        try {
+            typedRegistry.register("test:wrong", 42);
+            throw new AssertionError("typed registry accepted an incompatible value");
+        } catch (IllegalArgumentException expected) {
         }
         var catalog = loader.registries();
         catalog.create("test:items");

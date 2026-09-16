@@ -10,8 +10,17 @@ param(
 )
 $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
+$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 if ([string]::IsNullOrWhiteSpace($Artifact)) {
-    $Artifact = Join-Path $Root ("build\libs\neofabric-loader-{0}.jar" -f $LoaderVersion)
+    $ProjectArtifact = Join-Path $Root ("build\libs\neofabric-loader-{0}.jar" -f $LoaderVersion)
+    $PortableArtifact = Join-Path $ScriptDir ("neofabric-loader-{0}.jar" -f $LoaderVersion)
+    if (Test-Path -LiteralPath $ProjectArtifact -PathType Leaf) {
+        $Artifact = $ProjectArtifact
+    } elseif (Test-Path -LiteralPath $PortableArtifact -PathType Leaf) {
+        $Artifact = $PortableArtifact
+    } else {
+        throw "NeoFabric artifact not found. Put neofabric-loader-$LoaderVersion.jar beside this PS1 or pass -Artifact."
+    }
 }
 if (-not (Test-Path -LiteralPath $Artifact -PathType Leaf)) {
     throw "NeoFabric artifact not found: $Artifact"
@@ -37,22 +46,16 @@ try {
         }
     }
     $NeoFabricLibrary = [pscustomobject]@{ name = "org.neofabric:loader:$LoaderVersion" }
-    $Libraries = @($Base.libraries) + @($NeoFabricLibrary)
+    $Libraries = @($NeoFabricLibrary)
+    # Keep this child manifest deliberately minimal. The official launcher merges
+    # inherited manifests; copying arguments/logging/custom fields can create a
+    # mixed schema that is parsed as invalid (notably logging.argument/type).
     $Profile = [ordered]@{
         id = $ProfileId
         inheritsFrom = $Base.id
         type = "custom"
         mainClass = "org.neofabric.launcher.NeoFabricLauncher"
-        arguments = if ($null -ne $Base.PSObject.Properties["arguments"]) { $Base.arguments } else { [pscustomobject]@{} }
-        jvmArguments = if ($null -ne $Base.PSObject.Properties["jvmArguments"]) { $Base.jvmArguments } else { @() }
         libraries = $Libraries
-        neoFabric = [ordered]@{
-            development = $true
-            loaderJar = [System.IO.Path]::GetFileName($Artifact)
-            targetMainClass = $Base.mainClass
-            targetMinecraftVersion = $MinecraftVersion
-            status = "development-profile-generated"
-        }
     }
     $ProfileJson = Join-Path $VersionDir ("{0}.json" -f $ProfileId)
     $Profile | ConvertTo-Json -Depth 30 | Set-Content -LiteralPath $ProfileJson -Encoding UTF8

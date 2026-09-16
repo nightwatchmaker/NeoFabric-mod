@@ -16,10 +16,12 @@ public final class FabricMetadataAdapter {
     private static final Pattern ID = Pattern.compile("\\\"id\\\"\\s*:\\s*\\\"([^\\\"]+)\\\"");
     private static final Pattern VERSION = Pattern.compile("\\\"version\\\"\\s*:\\s*\\\"([^\\\"]+)\\\"");
     private static final Pattern ENTRYPOINT = Pattern.compile("\\\"([^\\\"]+)\\\"\\s*:\\s*\\[\\s*\\\"([^\\\"]+)\\\"");
+    private static final Pattern OBJECT_ENTRYPOINT = Pattern.compile("\\\"([^\\\"]+)\\\"\\s*:\\s*\\[\\s*\\{\\s*\\\"value\\\"\\s*:\\s*\\\"([^\\\"]+)\\\"");
     private static final Pattern DEPENDENCY = Pattern.compile("\\\"([^\\\"]+)\\\"\\s*:\\s*\\\"([^\\\"]+)\\\"");
     private static final Pattern MIXINS_BLOCK = Pattern.compile("\\\"mixins\\\"\\s*:\\s*\\[(.*?)]", Pattern.DOTALL);
     private static final Pattern MIXIN_CONFIG = Pattern.compile("\\\"(?:config|file)\\\"\\s*:\\s*\\\"([^\\\"]+)\\\"");
     private static final Pattern QUOTED_VALUE = Pattern.compile("\\\"([^\\\"]+\\.json)\\\"");
+    private static final Pattern ACCESS_WIDENER = Pattern.compile("\\\"accessWidener\\\"\\s*:\\s*\\\"([^\\\"]+)\\\"");
 
     private FabricMetadataAdapter() {}
 
@@ -32,6 +34,11 @@ public final class FabricMetadataAdapter {
             Matcher entryMatcher = ENTRYPOINT.matcher(json);
             while (entryMatcher.find()) {
                 entrypoints.computeIfAbsent(entryMatcher.group(1), ignored -> new ArrayList<>()).add(entryMatcher.group(2));
+            }
+            Matcher objectEntrypointMatcher = OBJECT_ENTRYPOINT.matcher(json);
+            while (objectEntrypointMatcher.find()) {
+                List<String> values = entrypoints.computeIfAbsent(objectEntrypointMatcher.group(1), ignored -> new ArrayList<>());
+                if (!values.contains(objectEntrypointMatcher.group(2))) values.add(objectEntrypointMatcher.group(2));
             }
             Map<String, String> dependencies = new LinkedHashMap<>();
             int dependencyStart = json.indexOf("\"depends\"");
@@ -49,7 +56,8 @@ public final class FabricMetadataAdapter {
                 Matcher strings = QUOTED_VALUE.matcher(mixinsMatcher.group(1));
                 while (strings.find() && !mixins.contains(strings.group(1))) mixins.add(strings.group(1));
             }
-            return new FabricModInfo(find(ID, json, "unknown"), find(VERSION, json, "unknown"), entrypoints, dependencies, mixins);
+            String accessWidener = find(ACCESS_WIDENER, json, "");
+            return new FabricModInfo(find(ID, json, "unknown"), find(VERSION, json, "unknown"), entrypoints, dependencies, mixins, accessWidener);
         }
     }
 
