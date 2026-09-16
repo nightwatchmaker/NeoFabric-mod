@@ -8,7 +8,9 @@ mkdir -p "$WORK/src/fixture" "$WORK/classes"
 cat > "$WORK/src/fixture/ExternalForgeMod.java" <<'JAVA'
 package fixture;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
 import org.neofabric.core.EntityDamageEvent;
+@Mod("externalforge")
 public final class ExternalForgeMod {
     @SubscribeEvent
     public static void onDamage(EntityDamageEvent event) {
