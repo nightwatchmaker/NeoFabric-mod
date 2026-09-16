@@ -66,6 +66,25 @@ public final class NeoFabricCompatibilityLayer implements AutoCloseable {
         return initialized;
     }
 
+    /** Initializes safe Forge-family entrypoints when the host is not FML. */
+    public synchronized ForeignFmlModBridge.Result initializeForeignFmlMods() throws IOException {
+        if (!started) throw new IllegalStateException("Compatibility layer has not started");
+        int constructed = 0;
+        int deferred = 0;
+        java.util.ArrayList<String> diagnostics = new java.util.ArrayList<>();
+        for (CompatibilityDecision decision : decisions) {
+            if (!decision.accepted()) continue;
+            if (decision.mod().loader() != LoaderKind.FORGE
+                    && decision.mod().loader() != LoaderKind.NEOFORGE) continue;
+            var result = ForeignFmlModBridge.initialize(Path.of(decision.mod().source()),
+                    classLoaders.get(decision.mod().id()));
+            constructed += result.constructed();
+            deferred += result.deferred();
+            diagnostics.addAll(result.diagnostics());
+        }
+        return new ForeignFmlModBridge.Result(constructed, deferred, List.copyOf(diagnostics));
+    }
+
     public NeoFabricLoader loader() {
         return loader;
     }
