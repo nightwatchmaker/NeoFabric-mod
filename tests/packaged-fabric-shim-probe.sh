@@ -7,14 +7,19 @@ rm -rf "$WORK"
 mkdir -p "$WORK/src/fixture" "$WORK/classes"
 cat > "$WORK/src/fixture/ExternalForgeMod.java" <<'JAVA'
 package fixture;
+import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import org.neofabric.core.EntityDamageEvent;
 @Mod("externalforge")
 public final class ExternalForgeMod {
-    @SubscribeEvent
-    public static void onDamage(EntityDamageEvent event) {
-        event.setAmount(1.0f);
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
+    public static void first(EntityDamageEvent event) {
+        event.setAmount(2.0f);
+    }
+    @SubscribeEvent(priority = EventPriority.LOWEST)
+    public static void last(EntityDamageEvent event) {
+        event.setAmount(event.amount() * 10.0f);
         event.setCanceled(true);
     }
 }
@@ -31,11 +36,11 @@ public final class Probe {
     public static void main(String[] args) throws Exception {
         EventBus bus = new EventBus();
         NeoFabricHostBridge.bind(bus);
-        var result = ForeignFmlEventBridge.register(Path.of(args[0]), Probe.class.getClassLoader(), bus);
-        if (result.subscribers() != 1) throw new AssertionError(result.diagnostics());
+        Class<?> foreignClass = Class.forName("fixture.ExternalForgeMod");
+        MinecraftForge.EVENT_BUS.register(foreignClass);
         var event = new EntityDamageEvent("entity", "source", 9.0f, "native");
         bus.post(event);
-        if (event.amount() != 1.0f || !event.isCanceled()) throw new AssertionError("round trip failed");
+        if (event.amount() != 20.0f || !event.isCanceled()) throw new AssertionError("priority round trip failed");
         DeferredRegister<String> registry = DeferredRegister.create(String.class, "externalforge");
         RegistryObject<String> value = registry.register("value", () -> "resolved");
         registry.register(MinecraftForge.EVENT_BUS);
