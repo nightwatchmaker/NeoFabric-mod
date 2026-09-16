@@ -20,10 +20,13 @@ public final class DeferredRegister<T> {
         return new DeferredRegister<>(registryClass.getName(), modid);
     }
 
+    public static <T> DeferredRegister<T> create(IForgeRegistry<?> registry, String modid) {
+        return new DeferredRegister<>(registry.getRegistryName(), modid);
+    }
+
     public static <T> DeferredRegister<T> create(String registryName, String modid) {
         return new DeferredRegister<>(registryName, modid);
     }
-
     public <I extends T> RegistryObject<I> register(String name, Supplier<? extends I> supplier) {
         String key = modid + ":" + name;
         RegistryObject<I> object = new RegistryObject<>(key, supplier);

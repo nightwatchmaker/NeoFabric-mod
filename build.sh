@@ -24,6 +24,8 @@ javac --release 25 -cp "$BUILD/classes:$ROOT/vendor/fabric-loader-0.19.5.jar" -d
     "$ROOT/src/adapter/java/net/minecraftforge/fml/common/Mod.java" \
     "$ROOT/src/adapter/java/net/minecraftforge/api/distmarker/Dist.java" \
     "$ROOT/src/adapter/java/net/minecraftforge/registries/RegistryObject.java" \
+    "$ROOT/src/adapter/java/net/minecraftforge/registries/IForgeRegistry.java" \
+    "$ROOT/src/adapter/java/net/minecraftforge/registries/ForgeRegistries.java" \
     "$ROOT/src/adapter/java/net/minecraftforge/registries/DeferredRegister.java" \
     "$ROOT/src/adapter/java/net/minecraftforge/common/MinecraftForge.java"
 find "$ROOT/src/adapter/java" -path '*/neoforge/*.java' -print0 | xargs -0 javac --release 25 -cp "$BUILD/classes:$ROOT/vendor/fml-loader-11.0.16.jar:$ROOT/vendor/neoforge-26.2.0.86.jar:/root/.gradle/caches/modules-2/files-2.1/net.neoforged/bus/8.0.5/5b2d33285ab5d1554e9798ad98c40d6ea3868bd5/bus-8.0.5.jar:$JSPECIFY_JAR:$FASTUTIL_JAR:/root/.gradle/caches/fabric-loom/minecraftMaven/net/minecraft/minecraft-merged-deobf/26.2/minecraft-merged-deobf-26.2.jar" -d "$BUILD/neoforge-classes"
