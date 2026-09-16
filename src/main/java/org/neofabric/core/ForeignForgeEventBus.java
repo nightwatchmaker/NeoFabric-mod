@@ -29,6 +29,10 @@ public final class ForeignForgeEventBus {
         }
     }
 
+    public void post(Object event) {
+        delegate.post(event);
+    }
+
     public <T> void addListener(Class<T> eventType, java.util.function.Consumer<T> listener) {
         delegate.register(eventType, listener);
     }

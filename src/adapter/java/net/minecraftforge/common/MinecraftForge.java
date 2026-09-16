@@ -19,5 +19,9 @@ public final class MinecraftForge {
                                                java.util.function.Consumer<T> listener) {
             delegate.addListener(eventType, listener);
         }
+        @Override public net.minecraftforge.eventbus.api.Event post(net.minecraftforge.eventbus.api.Event event) {
+            delegate.post(event);
+            return event;
+        }
     }
 }
