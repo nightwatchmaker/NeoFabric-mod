@@ -4,6 +4,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Supplier;
 import net.minecraftforge.eventbus.api.IEventBus;
+import org.neofabric.core.LifecycleEvent;
 
 /** Minimal Forge DeferredRegister facade for translated mods on Fabric. */
 public final class DeferredRegister<T> {
@@ -35,7 +36,11 @@ public final class DeferredRegister<T> {
     }
 
     public void register(IEventBus eventBus) {
-        // Registration is lazy; the host bridge resolves suppliers when handles are used.
+        eventBus.addListener(LifecycleEvent.class, event -> {
+            if (event.phase() == org.neofabric.core.LifecyclePhase.COMMON_SETUP) {
+                entries.values().forEach(RegistryObject::get);
+            }
+        });
     }
 
     public String registryName() { return registryName; }
