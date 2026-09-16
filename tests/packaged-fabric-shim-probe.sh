@@ -8,11 +8,18 @@ mkdir -p "$WORK/src/fixture" "$WORK/classes"
 cat > "$WORK/src/fixture/ExternalForgeMod.java" <<'JAVA'
 package fixture;
 import net.minecraftforge.eventbus.api.EventPriority;
+import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import org.neofabric.core.EntityDamageEvent;
 @Mod("externalforge")
 public final class ExternalForgeMod {
+    public static final class CustomEvent extends Event {
+        private boolean handled;
+        public void markHandled() { handled = true; }
+        public boolean handled() { return handled; }
+    }
+
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public static void first(EntityDamageEvent event) {
         event.setAmount(2.0f);
@@ -22,6 +29,10 @@ public final class ExternalForgeMod {
         event.setAmount(event.amount() * 10.0f);
         event.setCanceled(true);
     }
+    @SubscribeEvent
+    public static void custom(CustomEvent event) {
+        event.markHandled();
+    }
 }
 JAVA
 javac --release 17 -cp "$FABRIC_JAR" -d "$WORK/classes" "$WORK/src/fixture/ExternalForgeMod.java"
@@ -29,6 +40,7 @@ jar --create --file "$WORK/external-forge-mod.jar" -C "$WORK/classes" fixture/Ex
 cat > "$WORK/Probe.java" <<'JAVA'
 import java.nio.file.Path;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.RegistryObject;
 import org.neofabric.core.*;
@@ -41,6 +53,12 @@ public final class Probe {
         var event = new EntityDamageEvent("entity", "source", 9.0f, "native");
         bus.post(event);
         if (event.amount() != 20.0f || !event.isCanceled()) throw new AssertionError("priority round trip failed");
+        Class<?> customType = Class.forName("fixture.ExternalForgeMod$CustomEvent");
+        Object custom = customType.getDeclaredConstructor().newInstance();
+        MinecraftForge.EVENT_BUS.post((Event) custom);
+        if (!(Boolean) customType.getMethod("handled").invoke(custom)) {
+            throw new AssertionError("posted foreign event was not received");
+        }
         DeferredRegister<String> registry = DeferredRegister.create(String.class, "externalforge");
         RegistryObject<String> value = registry.register("value", () -> "resolved");
         registry.register(MinecraftForge.EVENT_BUS);
